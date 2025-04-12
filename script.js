@@ -49,7 +49,11 @@ function getTripHeadsign(tripId, included) {
 
 function formatTime(isoTime) {
     const date = new Date(isoTime);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Convert to 12-hour format, no leading zero
+    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
 function getStatus(prediction) {
@@ -63,14 +67,15 @@ function getTrack(prediction) {
     const stopId = prediction.relationships?.stop?.data?.id;
     const parts = stopId?.split("-");
     const last = parts?.[parts.length - 1];
-    return isNaN(last) ? null : last;
+    return isNaN(last) ? null : String(parseInt(last)); // Removes leading zeros
 }
 
 function extractTrainNumber(tripId) {
-  if (!tripId) return '—';
-  const match = tripId.match(/-(\d{3,4})$/); // Match last dash followed by 3–4 digits at end
-  return match ? match[1] : '—';
-}
+    if (!tripId) return '—';
+    const parts = tripId.split('-');
+    const trainNum = parts.find(part => /^\d{2,4}$/.test(part));
+    return trainNum || '—';
+  }
 
 function renderTrainBoard(departures) {
     const board = document.getElementById('train-board');
